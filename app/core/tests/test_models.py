@@ -57,3 +57,14 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(ingredient), ingredient.name)
+
+    def test_drug_str(self):
+
+        drug = models.Drug.objects.create(
+            user=sample_user(),
+            title='Chloriquien',
+            daily_frequency=5,
+            price=50.00
+        )
+
+        self.assertEqual(str(drug), drug.title)
