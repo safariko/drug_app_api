@@ -156,3 +156,38 @@ class PrivateDrugApiTests(TestCase):
         self.assertEqual(ingredients.count(), 2)
         self.assertIn(ingredient1, ingredients)
         self.assertIn(ingredient2, ingredients)
+
+    def test_partial_update_drug(self):
+        """Test updating a drug with patch"""
+        drug = sample_drug(user=self.user)
+        drug.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='new tag')
+
+        payload = {'title': 'Chicken drug', 'tags': [new_tag.id]}
+        url = detail_url(drug.id)
+        self.client.patch(url, payload)
+
+        drug.refresh_from_db()
+        self.assertEqual(drug.title, payload['title'])
+        tags = drug.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_drug(self):
+        """Test updating a drug with put"""
+        drug = sample_drug(user=self.user)
+        drug.tags.add(sample_tag(user=self.user))
+        payload = {
+            'title': 'arbon drug',
+            'daily_frequency': 25,
+            'price': 5.00
+        }
+        url = detail_url(drug.id)
+        self.client.put(url, payload)
+
+        drug.refresh_from_db()
+        self.assertEqual(drug.title, payload['title'])
+        self.assertEqual(drug.daily_frequency, payload['daily_frequency'])
+        self.assertEqual(drug.price, payload['price'])
+        tags = drug.tags.all()
+        self.assertEqual(len(tags), 0)
