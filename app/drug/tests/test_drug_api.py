@@ -226,3 +226,60 @@ class DrugImageUploadTests(TestCase):
         res = self.client.post(url, {'image': 'notimage'}, format='multipart')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class DrugFilterTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@dummy.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
+
+
+    def test_filter_drugs_by_tags(self):
+        """Test returning drugs with specific tags"""
+        drug1 = sample_drug(user=self.user, title='Thai')
+        drug2 = sample_drug(user=self.user, title='Japanese')
+        tag1 = sample_tag(user=self.user, name='new')
+        tag2 = sample_tag(user=self.user, name='old')
+        drug1.tags.add(tag1)
+        drug2.tags.add(tag2)
+        drug3 = sample_drug(user=self.user, title='British')
+
+        res = self.client.get(
+            DRUGS_URL,
+            {'tags': f'{tag1.id},{tag2.id}'}
+        )
+
+        serializer1 = DrugSerializer(drug1)
+        serializer2 = DrugSerializer(drug2)
+        serializer3 = DrugSerializer(drug3)
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+
+
+    def test_filter_drugs_by_ingredients(self):
+        """Test returning recipes with specific ingredients"""
+        drug1 = sample_drug(user=self.user, title='French')
+        drug2 = sample_drug(user=self.user, title='Polish')
+        ingredient1 = sample_ingredient(user=self.user, name='Water')
+        ingredient2 = sample_ingredient(user=self.user, name='Zinc')
+        drug1.ingredients.add(ingredient1)
+        drug2.ingredients.add(ingredient2)
+        drug3 = sample_drug(user=self.user, title='Swedish')
+
+        res = self.client.get(
+            DRUGS_URL,
+            {'ingredients': f'{ingredient1.id},{ingredient2.id}'}
+        )
+
+        serializer1 = DrugSerializer(drug1)
+        serializer2 = DrugSerializer(drug2)
+        serializer3 = DrugSerializer(drug3)
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)

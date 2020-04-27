@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient
+from core.models import Ingredient, Drug
 
 from drug.serializers import IngredientSerializer
 
@@ -81,3 +81,45 @@ class PrivateIngredientsApiTests(TestCase):
         res = self.client.post(INGREDIENTS_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_ingredients_assigned_to_drugs(self):
+        """Test filtering ingredients by those assigned to drugs"""
+        ingredient1 = Ingredient.objects.create(user=self.user, name='Morning')
+        ingredient2 = Ingredient.objects.create(user=self.user, name='Evening')
+        drug = Drug.objects.create(
+            title='Lily drug',
+            daily_frequency=10,
+            price=5.00,
+            user=self.user
+        )
+        drug.ingredients.add(ingredient1)
+
+        res = self.client.get(INGREDIENTS_URL, {'assigned_only': 1})
+
+        serializer1 = IngredientSerializer(ingredient1)
+        serializer2 = IngredientSerializer(ingredient2)
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_ingredients_assigned_unique(self):
+        """Test filtering ingredients by assigned returns unique items"""
+        ingredient = Ingredient.objects.create(user=self.user, name='Breakfast')
+        Ingredient.objects.create(user=self.user, name='Lunch')
+        drug1 = Drug.objects.create(
+            title='Egyptian',
+            daily_frequency=5,
+            price=3.00,
+            user=self.user
+        )
+        drug1.ingredients.add(ingredient)
+        drug2 = Drug.objects.create(
+            title='French',
+            daily_frequency=3,
+            price=2.00,
+            user=self.user
+        )
+        drug2.ingredients.add(ingredient)
+
+        res = self.client.get(INGREDIENTS_URL, {'assigned_only': 1})
+
+        self.assertEqual(len(res.data), 1)
