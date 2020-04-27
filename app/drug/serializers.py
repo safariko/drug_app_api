@@ -52,3 +52,11 @@ class DrugDetailSerializer(DrugSerializer):
     """Serialize a recipe detail"""
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+
+class DrugImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to recipes"""
+
+    class Meta:
+        model = Drug
+        fields = ('id', 'image')
+        read_only_fields = ('id',)

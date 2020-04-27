@@ -8,10 +8,10 @@ from core.models import Tag, Ingredient, Drug
 
 from drug import serializers
 
-class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
+class BaseDrugAttrViewSet(viewsets.GenericViewSet,
                             mixins.ListModelMixin,
                             mixins.CreateModelMixin):
-    """Base viewset for user owned recipe attributes"""
+    """Base viewset for user owned drug attributes"""
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
@@ -33,13 +33,13 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
         serializer.save(user=self.request.user)
 
 
-class TagViewSet(BaseRecipeAttrViewSet):
+class TagViewSet(BaseDrugAttrViewSet):
     """Manage tags in the database"""
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
 
 
-class IngredientViewSet(BaseRecipeAttrViewSet):
+class IngredientViewSet(BaseDrugAttrViewSet):
     """Manage tags in the database"""
     queryset = Ingredient.objects.all()
     serializer_class = serializers.IngredientSerializer
@@ -74,11 +74,32 @@ class DrugViewSet(viewsets.ModelViewSet):
         """Return appropriate serializer class"""
         if self.action == 'retrieve':
             return serializers.DrugDetailSerializer
-        # elif self.action == 'upload_image':
-        #     return serializers.DrugImageSerializer
+        elif self.action == 'upload_image':
+            return serializers.DrugImageSerializer
 
         return self.serializer_class
 
     def perform_create(self, serializer):
         """Create a new drug"""
         serializer.save(user=self.request.user)
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to a drug"""
+        drug = self.get_object()
+        serializer = self.get_serializer(
+            drug,
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )

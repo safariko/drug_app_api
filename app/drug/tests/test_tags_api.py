@@ -28,10 +28,7 @@ class PrivateTagsApiTests(TestCase):
     """Test the authorized user tags API"""
 
     def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            'test@dummy.com',
-            'password123'
-        )
+        self.user = get_user_model().objects.create_user('test@dummy.com', 'password123')
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
@@ -67,10 +64,7 @@ class PrivateTagsApiTests(TestCase):
         payload = {'name': 'Test tag'}
         self.client.post(TAGS_URL, payload)
 
-        exists = Tag.objects.filter(
-            user=self.user,
-            name=payload['name']
-        ).exists()
+        exists = Tag.objects.filter(user=self.user, name=payload['name']).exists()
         self.assertTrue(exists)
 
     def test_create_tag_invalid(self):

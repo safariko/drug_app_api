@@ -22,11 +22,7 @@ class PublicUserApiTests(TestCase):
 
     def test_create_valid_user_success(self):
         """Test creating user with valid payload is successful"""
-        payload = {
-            'email': 'test@dummy.com',
-            'password': 'testpass',
-            'name': 'Test name'
-        }
+        payload = {'email': 'test@dummy.com', 'password': 'testpass', 'name': 'Test name'}
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -104,11 +100,7 @@ class PrivateUserApiTests(TestCase):
     """Test API requests that require authentication"""
 
     def setUp(self):
-        self.user = create_user(
-            email='test@dummy.com',
-            password='testpass',
-            name='name'
-        )
+        self.user = create_user(email='test@dummy.com', password='testpass', name='name')
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
